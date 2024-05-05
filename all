@@ -1,0 +1,2 @@
+my_aws_profile: aws_secret_manager
+aws_region: ap-south-1
