@@ -1,0 +1,23 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: nginx-viewer-layer7
+  namespace: traffic-router
+spec:
+  targetRefs:
+  - kind: Service
+    group: ""
+    name: istio-rollout-stable
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+#         - cluster.local/ns/traffic-router/sa/default
+#         - cluster.local/ns/traffic-router/sa/nginx-gateway-istio
+#         - cluster.local/ns/traffic-router/sa/nginx-gateway-istio
+          - cluster.local/ns/traffic-router/sa/default
+    to:
+    - operation:
+        methods: ["GET"]
+        ports: ["80"]

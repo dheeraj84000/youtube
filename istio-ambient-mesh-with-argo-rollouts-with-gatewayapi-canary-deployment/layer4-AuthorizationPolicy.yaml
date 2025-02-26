@@ -1,0 +1,18 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: nginx-viewer
+  namespace: traffic-router
+spec:
+  selector:
+    matchLabels:
+      app: istio-rollout
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+         - cluster.local/ns/traffic-router/sa/nginx-gateway-istio         
+#         - cluster.local/ns/traffic-router/sa/default
+        #- cluster.local/ns/*/sa/* 
+         - cluster.local/ns/traffic-router/sa/waypoint
