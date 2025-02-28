@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: istio-rollout
+  namespace: traffic-router 
+spec:
+  replicas: 1 
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: istio-rollout
+  template:
+    metadata:
+      labels:
+        app: istio-rollout
+    spec:
+      containers:
+      - name: istio-rollout
+        image: dheeraj84000/nginx-amd:v1
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 5m
+  strategy:
+    canary:
+       canaryService: istio-rollout-canary
+       stableService: istio-rollout-stable
+#       analysis:
+#         startingStep: 1   # index of step list, of when to start this analysis
+#         templates:
+#         - templateName: istio-success-rate
+       trafficRouting:
+         managedRoutes:
+         - name: nginx-http-route
+         plugins:
+           argoproj-labs/gatewayAPI:
+                 httpRoute: nginx-http-route
+                 namespace: traffic-router       
+       steps:
+       - setWeight: 10
+       - pause: {duration: 30s}         # pause indefinitely
+       - analysis:
+          templates:
+          - templateName: istio-success-rate
+       - setWeight: 20
+       - pause: {duration: 30s}
+       - setWeight: 30
+       - pause: {duration: 30s}
+       - setWeight: 40
+       - pause: {duration: 30s}
+       - setWeight: 50
+       - pause: {duration: 30s}
+       - setWeight: 60
+       - pause: {duration: 30s}
+       - setWeight: 70
+       - pause: {duration: 30s}
+       - setWeight: 80
+       - pause: {duration: 30s}
+       - setWeight: 100
+       - pause: {duration: 30s}
