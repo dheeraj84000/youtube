@@ -1,0 +1,77 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: nginx-http-route
+  namespace: traffic-router
+spec:
+  parentRefs:
+  - name: nginx-gateway
+  - group: ""
+    kind: Service
+    name: istio-rollout-stable
+    port: 80  
+  hostnames:
+    - "ambient.devopswithdky.com"
+  rules:
+  - matches:
+    - path:
+        type: Exact
+        value: /
+    backendRefs:
+    - name: istio-rollout-canary 
+      port: 80
+      weight: 0
+    - name: istio-rollout-stable
+      port: 80
+      weight: 100
+######################################## this block is only added for header based advanced custom routing while canary deployment ##
+####### when you hit 'curl -H "test:true" istio-rollout-stable' then this will only send traffic to canary service as per the rule  ##
+################ if you dont want to use it then remove it, your canary deployment will also work propery without this block #####
+  - matches:
+    - path:
+        type: Exact
+        value: /
+      headers:
+       #- type: Exact
+       - name: test
+         value: "true"
+    backendRefs:
+    - name: istio-rollout-canary
+      port: 80
+      kind: Service
+######################################### use this block to test the rewrite rule ################################################
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /dheeraj
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    backendRefs:
+    - name: istio-rollout-canary
+      port: 80
+      kind: Service
+
+######################################## use this block to test both rewrite rule with header ####################################
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /dheeraj
+      headers:
+       - type: Exact
+         name: test
+         value: "true"
+    filters:
+    - type: URLRewrite
+      urlRewrite:
+        path:
+          replacePrefixMatch: /
+          type: ReplacePrefixMatch
+    backendRefs:
+    - name: istio-rollout-canary
+      port: 80
+      kind: Service
+
